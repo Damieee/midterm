@@ -191,45 +191,118 @@ void naive_glow(pixel *src, pixel *dst)
  * IMPORTANT: This is the version you will be graded on
  */
 char glow_descr[] = "glow: Current working version";
+
 void glow(pixel *src, pixel *dst)
 {
+    int image_dimension = src->dim;
     int i, j;
 
-    for (i = 0; i < src->dim; i++) {
-        for (j = 0; j < src->dim; j++) {
-            float sum = 0.0;
+    for (i = 0; i < image_dimension; i++) {
+        for (j = 0; j < image_dimension; j++) {
 
-            // Add top left
-            if (i > 0 && j > 0) {
-                sum += 0.16 * src[RIDX(i - 1, j - 1, src->dim)].red;
+            int s_idx = RIDX(i, j, image_dimension);
+            int d_idx = RIDX(i, j, image_dimension);
+            int bottom_right = RIDX(i + 1, j + 1, image_dimension);
+            int bottom_left = RIDX(i + 1, j - 1, image_dimension);
+            int top_left = RIDX(i - 1, j - 1, image_dimension);
+            int top_right = RIDX(i - 1, j + 1, image_dimension);
+
+
+
+
+            // Initialize the sum with the current pixel value
+
+            int sum_red = (int)src[s_idx].red * 0.3;
+            int sum_green = (int)src[s_idx].green * 0.3;
+            int sum_blue = (int)src[s_idx].blue * 0.3;
+
+            // Is it a corner pixel, an edge pixel or a regular pixel
+
+            if ((i==0 && j==0) || (i == 0 && j == image_dimension - 1) || (i == image_dimension - 1 && j == 0) || (i == image_dimension - 1 && j == image_dimension - 1)){
+              if (i == 0 && j == 0) {
+                sum_red += (int)src[bottom_right].red * 0.16;
+                sum_green += (int)src[bottom_right].green * 0.16;
+                sum_blue += (int)src[bottom_right].blue * 0.16;
+              }
+              else if (i == 0 && j == image_dimension - 1){
+                sum_red += (int)src[bottom_left].red * 0.16;
+                sum_green += (int)src[bottom_left].green * 0.16;
+                sum_blue += (int)src[bottom_left].blue * 0.16;
+              }
+              else if (i == image_dimension - 1 && j == 0){
+                sum_red += (int)src[top_right].red * 0.16;
+                sum_green += (int)src[top_right].green * 0.16;
+                sum_blue += (int)src[top_right].blue * 0.16;
+              }
+              else {
+                sum_red += (int)src[top_left].red * 0.16;
+                sum_green += (int)src[top_left].green * 0.16;
+                sum_blue += (int)src[top_left].blue * 0.16;
+
+              }
+            } else if (j == 0){
+                sum_red += (int)src[top_right].red * 0.16;
+                sum_green += (int)src[top_right].green * 0.16;
+                sum_blue += (int)src[top_right].blue * 0.16;
+
+                sum_red += (int)src[bottom_right].red * 0.16;
+                sum_green += (int)src[bottom_right].green * 0.16;
+                sum_blue += (int)src[bottom_right].blue * 0.16;
+            } else if (j ==image_dimension-1){
+
+                sum_red += (int)src[top_left].red * 0.16;
+                sum_green += (int)src[top_left].green * 0.16;
+                sum_blue += (int)src[top_left].blue * 0.16;
+
+                sum_red += (int)src[bottom_left].red * 0.16;
+                sum_green += (int)src[bottom_left].green * 0.16;
+                sum_blue += (int)src[bottom_left].blue * 0.16;              
+            } else if (i==0){
+
+                sum_red += (int)src[bottom_left].red * 0.16;
+                sum_green += (int)src[bottom_left].green * 0.16;
+                sum_blue += (int)src[bottom_left].blue * 0.16;
+
+                sum_red += (int)src[bottom_right].red * 0.16;
+                sum_green += (int)src[bottom_right].green * 0.16;
+                sum_blue += (int)src[bottom_right].blue * 0.16;
+
+            }else if (i == image_dimension-1){
+
+                sum_red += (int)src[top_left].red * 0.16;
+                sum_green += (int)src[top_left].green * 0.16;
+                sum_blue += (int)src[top_left].blue * 0.16;
+
+                sum_red += (int)src[top_right].red * 0.16;
+                sum_green += (int)src[top_right].green * 0.16;
+                sum_blue += (int)src[top_right].blue * 0.16;
+
+            } else {
+
+                sum_red += (int)src[bottom_right].red * 0.16;
+                sum_green += (int)src[bottom_right].green * 0.16;
+                sum_blue += (int)src[bottom_right].blue * 0.16;
+
+                sum_red += (int)src[bottom_left].red * 0.16;
+                sum_green += (int)src[bottom_left].green * 0.16;
+                sum_blue += (int)src[bottom_left].blue * 0.16;
+
+                sum_red += (int)src[top_right].red * 0.16;
+                sum_green += (int)src[top_right].green * 0.16;
+                sum_blue += (int)src[top_right].blue * 0.16;
+
+                sum_red += (int)src[top_left].red * 0.16;
+                sum_green += (int)src[top_left].green * 0.16;
+                sum_blue += (int)src[top_left].blue * 0.16;
+                
             }
-
-            // Add top right
-            if (i > 0 && j < src->dim - 1) {
-                sum += 0.16 * src[RIDX(i - 1, j + 1, src->dim)].red;
-            }
-
-            // Add bottom left
-            if (i < src->dim - 1 && j > 0) {
-                sum += 0.16 * src[RIDX(i + 1, j - 1, src->dim)].red;
-            }
-
-            // Add bottom right
-            if (i < src->dim - 1 && j < src->dim - 1) {
-                sum += 0.16 * src[RIDX(i + 1, j + 1, src->dim)].red;
-            }
-
-            // Add current pixel
-            sum += 0.3 * src[RIDX(i, j, src->dim)].red;
-
             // Assign the sum to destination pixel
-            dst[RIDX(i, j, src->dim)].red = (unsigned short)sum;
-            dst[RIDX(i, j, src->dim)].green = (unsigned short)sum;
-            dst[RIDX(i, j, src->dim)].blue = (unsigned short)sum;
-        }
+            dst[d_idx].red = (unsigned short)sum_red;
+            dst[d_idx].green = (unsigned short)sum_green;
+            dst[d_idx].blue = (unsigned short)sum_blue;
+          }
     }
 }
-
 /*********************************************************************
  * register_glow_functions - Register all of your different versions
  *     of the glow kernel with the driver by calling the
