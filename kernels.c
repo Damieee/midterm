@@ -38,6 +38,7 @@ void naive_pinwheel(pixel *src, pixel *dest)
         dest[d_idx] = src[s_idx];
       }
     }
+
 }
 
 /*
@@ -47,7 +48,42 @@ void naive_pinwheel(pixel *src, pixel *dest)
 char pinwheel_descr[] = "pinwheel: Current working version";
 void pinwheel(pixel *src, pixel *dest)
 {
-  naive_pinwheel(src, dest);
+  int tile_size = 6;
+  int image_dimension = src->dim;
+  float half_dim = image_dimension / 2;
+  float temp = 0.5 - half_dim;
+
+  for (int ii = 0; ii < image_dimension; ii += tile_size) {
+      for (int jj = 0; jj < image_dimension; jj += tile_size) {
+          for (int i = ii; i < (ii + tile_size < image_dimension ? ii + tile_size : image_dimension); i++) {
+              for (int j = jj; j < (jj + tile_size < image_dimension ? jj + tile_size : image_dimension); j++) {
+                  /* Check whether we're in the diamond region */
+                  if ((fabs(i + temp) + fabs(j + temp)) < half_dim)
+                  {
+
+                    /* In diamond region, so rotate and grayscale */
+                    int s_idx = RIDX(i, j, image_dimension);
+
+                    int d_idx = RIDX(image_dimension - j - 1, i, image_dimension);
+
+                    int gray_value = ((int)src[s_idx].red + src[s_idx].green + src[s_idx].blue) / 3;
+                    dest[d_idx].red = gray_value;
+                    dest[d_idx].green = gray_value;
+                    dest[d_idx].blue = gray_value;
+
+                  }
+                  else
+                  {
+                    /* Not in diamond region, so keep the same */
+                    int s_idx = RIDX(i, j, image_dimension);
+                    int d_idx = RIDX(i, j, image_dimension);
+                    dest[d_idx] = src[s_idx];
+
+                  }
+              }
+          }
+      }
+  }
 }
 
 /*********************************************************************
@@ -157,7 +193,41 @@ void naive_glow(pixel *src, pixel *dst)
 char glow_descr[] = "glow: Current working version";
 void glow(pixel *src, pixel *dst)
 {
-  naive_glow(src, dst);
+    int i, j;
+
+    for (i = 0; i < src->dim; i++) {
+        for (j = 0; j < src->dim; j++) {
+            float sum = 0.0;
+
+            // Add top left
+            if (i > 0 && j > 0) {
+                sum += 0.16 * src[RIDX(i - 1, j - 1, src->dim)].red;
+            }
+
+            // Add top right
+            if (i > 0 && j < src->dim - 1) {
+                sum += 0.16 * src[RIDX(i - 1, j + 1, src->dim)].red;
+            }
+
+            // Add bottom left
+            if (i < src->dim - 1 && j > 0) {
+                sum += 0.16 * src[RIDX(i + 1, j - 1, src->dim)].red;
+            }
+
+            // Add bottom right
+            if (i < src->dim - 1 && j < src->dim - 1) {
+                sum += 0.16 * src[RIDX(i + 1, j + 1, src->dim)].red;
+            }
+
+            // Add current pixel
+            sum += 0.3 * src[RIDX(i, j, src->dim)].red;
+
+            // Assign the sum to destination pixel
+            dst[RIDX(i, j, src->dim)].red = (unsigned short)sum;
+            dst[RIDX(i, j, src->dim)].green = (unsigned short)sum;
+            dst[RIDX(i, j, src->dim)].blue = (unsigned short)sum;
+        }
+    }
 }
 
 /*********************************************************************
